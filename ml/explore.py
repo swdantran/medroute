@@ -157,3 +157,13 @@ numeric_features = [
     "StaffToPatientRatio",
     "ArrivalHour"
 ]
+
+print("\nWait time by triage category:")
+
+triage_stats = (
+    df.groupby("TriageCategory")["WaitToProviderMinutes"]
+    .agg(["count", "mean", "median", "min", "max"])
+    .sort_values("median")
+)
+
+print(triage_stats)
