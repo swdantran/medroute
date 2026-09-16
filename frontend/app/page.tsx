@@ -1,5 +1,7 @@
 "use client";
+
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
 
 type HospitalRecommendation = {
@@ -10,7 +12,17 @@ type HospitalRecommendation = {
   predicted_wait_minutes: number;
   time_to_care_minutes: number;
   occupancy_rate: number;
+  latitude: number;
+  longitude: number;
 };
+
+
+const HospitalMap = dynamic(
+  () => import("./components/HospitalMap"),
+  {
+    ssr: false,
+  }
+);
 
 
 export default function Home() {
@@ -74,19 +86,20 @@ export default function Home() {
     );
   }
 
+
   function getAgeGroup(ageValue: number) {
     if (ageValue <= 17) {
       return "Pediatric (0-17)";
     }
-  
+
     if (ageValue <= 35) {
       return "Young Adult (18-35)";
     }
-  
+
     if (ageValue <= 60) {
       return "Adult (36-60)";
     }
-  
+
     return "Senior (61+)";
   }
 
@@ -114,10 +127,10 @@ export default function Home() {
       setError(
         "Please enter a valid age."
       );
-      
+
       return;
     }
-    
+
     const ageGroup = getAgeGroup(
       numericAge
     );
@@ -180,6 +193,7 @@ export default function Home() {
 
       <div className="mx-auto max-w-5xl px-6 py-16">
 
+        {/* Header */}
         <div className="mb-12">
 
           <h1 className="text-4xl font-bold text-gray-900">
@@ -194,6 +208,7 @@ export default function Home() {
         </div>
 
 
+        {/* Search form */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
 
           <h2 className="text-xl font-semibold text-gray-900">
@@ -206,6 +221,7 @@ export default function Home() {
           </p>
 
 
+          {/* Location button */}
           <button
             onClick={getCurrentLocation}
             disabled={locationLoading}
@@ -217,6 +233,7 @@ export default function Home() {
           </button>
 
 
+          {/* Location success */}
           {latitude !== null &&
             longitude !== null && (
 
@@ -237,74 +254,85 @@ export default function Home() {
               </div>
             )}
 
-<div className="mt-8 grid gap-6 md:grid-cols-2">
 
-<div>
-  <label
-    htmlFor="age"
-    className="block text-sm font-medium text-gray-700"
-  >
-    Age
-  </label>
+          {/* Patient information */}
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
 
-  <input
-    id="age"
-    type="number"
-    min="0"
-    max="120"
-    value={age}
-    onChange={(event) =>
-      setAge(event.target.value)
-    }
-    placeholder="21"
-    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-black"
-  />
-</div>
+            {/* Age */}
+            <div>
 
+              <label
+                htmlFor="age"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Age
+              </label>
 
-<div>
-  <label
-    htmlFor="urgency"
-    className="block text-sm font-medium text-gray-700"
-  >
-    Urgency
-  </label>
+              <input
+                id="age"
+                type="number"
+                min="0"
+                max="120"
+                value={age}
+                onChange={(event) =>
+                  setAge(event.target.value)
+                }
+                placeholder="21"
+                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-black"
+              />
 
-  <select
-    id="urgency"
-    value={triageCategory}
-    onChange={(event) =>
-      setTriageCategory(
-        event.target.value
-      )
-    }
-    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-black"
-  >
-    <option value="Immediate">
-      Immediate
-    </option>
-
-    <option value="Emergency">
-      Emergency
-    </option>
-
-    <option value="Urgent">
-      Urgent
-    </option>
-
-    <option value="Semi-urgent">
-      Semi-urgent
-    </option>
-
-    <option value="Non-urgent">
-      Non-urgent
-    </option>
-  </select>
-</div>
-
-</div>
+            </div>
 
 
+            {/* Urgency */}
+            <div>
+
+              <label
+                htmlFor="urgency"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Urgency
+              </label>
+
+              <select
+                id="urgency"
+                value={triageCategory}
+                onChange={(event) =>
+                  setTriageCategory(
+                    event.target.value
+                  )
+                }
+                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-black"
+              >
+
+                <option value="Immediate">
+                  Immediate
+                </option>
+
+                <option value="Emergency">
+                  Emergency
+                </option>
+
+                <option value="Urgent">
+                  Urgent
+                </option>
+
+                <option value="Semi-urgent">
+                  Semi-urgent
+                </option>
+
+                <option value="Non-urgent">
+                  Non-urgent
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+
+          {/* Find hospitals */}
           <button
             onClick={findHospitals}
             disabled={
@@ -320,6 +348,7 @@ export default function Home() {
           </button>
 
 
+          {/* Error message */}
           {error && (
             <p className="mt-4 text-red-600">
               {error}
@@ -329,6 +358,7 @@ export default function Home() {
         </div>
 
 
+        {/* Recommendations */}
         {recommendations.length > 0 && (
 
           <section className="mt-10">
@@ -338,6 +368,23 @@ export default function Home() {
             </h2>
 
 
+            {/* MAP GOES HERE */}
+            {latitude !== null &&
+              longitude !== null && (
+
+                <div className="mb-8">
+
+                  <HospitalMap
+                    userLatitude={latitude}
+                    userLongitude={longitude}
+                    hospitals={recommendations}
+                  />
+
+                </div>
+              )}
+
+
+            {/* Hospital cards */}
             <div className="space-y-4">
 
               {recommendations.map(
@@ -385,6 +432,7 @@ export default function Home() {
 
                     <div className="mt-5 grid grid-cols-3 gap-4 border-t pt-5">
 
+                      {/* Drive time */}
                       <div>
 
                         <p className="text-sm text-gray-500">
@@ -399,6 +447,7 @@ export default function Home() {
                       </div>
 
 
+                      {/* Predicted wait */}
                       <div>
 
                         <p className="text-sm text-gray-500">
@@ -413,6 +462,7 @@ export default function Home() {
                       </div>
 
 
+                      {/* Distance */}
                       <div>
 
                         <p className="text-sm text-gray-500">
@@ -438,6 +488,7 @@ export default function Home() {
         )}
 
 
+        {/* Disclaimer */}
         <p className="mt-10 text-sm text-gray-500">
           Prototype only. Hospital operating
           conditions are currently simulated.

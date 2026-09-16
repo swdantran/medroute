@@ -117,6 +117,12 @@ def recommend_hospitals(
                 "staff_patient_ratio": conditions[
                     "staff_patient_ratio"
                 ],
+                "latitude": float(
+                    hospital["Latitude"]
+                    ),
+                "longitude": float(
+                    hospital["Longitude"]
+                    ),
             }
         )
 
