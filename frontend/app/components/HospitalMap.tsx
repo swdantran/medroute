@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
+
 import {
   CircleMarker,
   MapContainer,
   Popup,
   TileLayer,
+  useMap,
 } from "react-leaflet";
+
+import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
 
@@ -28,6 +33,51 @@ type Props = {
 };
 
 
+function FitMapBounds({
+  userLatitude,
+  userLongitude,
+  hospitals,
+}: Props) {
+  const map = useMap();
+
+  useEffect(() => {
+    const points: [number, number][] = [
+      [
+        userLatitude,
+        userLongitude,
+      ],
+
+      ...hospitals.map(
+        (hospital) =>
+          [
+            hospital.latitude,
+            hospital.longitude,
+          ] as [number, number]
+      ),
+    ];
+
+    const bounds = L.latLngBounds(
+      points
+    );
+
+    map.fitBounds(
+      bounds,
+      {
+        padding: [40, 40],
+      }
+    );
+
+  }, [
+    map,
+    userLatitude,
+    userLongitude,
+    hospitals,
+  ]);
+
+  return null;
+}
+
+
 export default function HospitalMap({
   userLatitude,
   userLongitude,
@@ -43,9 +93,19 @@ export default function HospitalMap({
       scrollWheelZoom={true}
       className="h-[450px] w-full rounded-2xl"
     >
+
+      {/* OpenStreetMap background */}
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+
+      {/* Automatically fit all locations */}
+      <FitMapBounds
+        userLatitude={userLatitude}
+        userLongitude={userLongitude}
+        hospitals={hospitals}
       />
 
 
@@ -63,14 +123,17 @@ export default function HospitalMap({
         }}
       >
         <Popup>
-          Your location
+          <strong>
+            Your location
+          </strong>
         </Popup>
       </CircleMarker>
 
 
-      {/* Hospitals */}
+      {/* Hospital markers */}
       {hospitals.map(
         (hospital, index) => (
+
           <CircleMarker
             key={hospital.hospital_name}
             center={[
@@ -85,15 +148,20 @@ export default function HospitalMap({
                 index === 0
                   ? "green"
                   : "red",
+
               fillColor:
                 index === 0
                   ? "green"
                   : "red",
+
               fillOpacity: 0.9,
             }}
           >
+
             <Popup>
+
               <div>
+
                 <strong>
                   #{index + 1}{" "}
                   {hospital.hospital_name}
@@ -104,24 +172,41 @@ export default function HospitalMap({
                 {hospital.city}, MA
 
                 <br />
+                <br />
 
                 Drive:{" "}
-                {hospital.travel_minutes.toFixed(1)} min
+                {hospital.travel_minutes.toFixed(
+                  1
+                )}{" "}
+                min
 
                 <br />
 
                 Predicted wait:{" "}
-                {hospital.predicted_wait_minutes.toFixed(1)} min
+                {hospital.predicted_wait_minutes.toFixed(
+                  1
+                )}{" "}
+                min
 
                 <br />
 
-                Time-to-care:{" "}
-                {hospital.time_to_care_minutes.toFixed(1)} min
+                <strong>
+                  Time-to-care:{" "}
+                  {hospital.time_to_care_minutes.toFixed(
+                    1
+                  )}{" "}
+                  min
+                </strong>
+
               </div>
+
             </Popup>
+
           </CircleMarker>
+
         )
       )}
+
     </MapContainer>
   );
 }

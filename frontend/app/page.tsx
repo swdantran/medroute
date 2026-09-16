@@ -7,13 +7,13 @@ import dynamic from "next/dynamic";
 type HospitalRecommendation = {
   hospital_name: string;
   city: string;
+  latitude: number;
+  longitude: number;
   travel_minutes: number;
   driving_miles: number;
   predicted_wait_minutes: number;
   time_to_care_minutes: number;
   occupancy_rate: number;
-  latitude: number;
-  longitude: number;
 };
 
 
@@ -151,13 +151,9 @@ export default function Home() {
           body: JSON.stringify({
             user_latitude: latitude,
             user_longitude: longitude,
-
             triage_category: triageCategory,
-
             age_group: ageGroup,
-
             arrival_method: "Walk-in",
-
             limit: 5,
           }),
         }
@@ -208,32 +204,40 @@ export default function Home() {
         </div>
 
 
-        {/* Search form */}
+        {/* Search card */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
 
           <h2 className="text-xl font-semibold text-gray-900">
-            Your location
+            Find care
           </h2>
 
           <p className="mt-2 text-gray-600">
-            MedRoute uses your location to find
-            nearby emergency departments.
+            Tell MedRoute where you are and a little
+            about the patient.
           </p>
 
 
-          {/* Location button */}
-          <button
-            onClick={getCurrentLocation}
-            disabled={locationLoading}
-            className="mt-6 rounded-lg border border-gray-300 px-5 py-3 font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50"
-          >
-            {locationLoading
-              ? "Getting location..."
-              : "Use my current location"}
-          </button>
+          {/* Location */}
+          <div className="mt-6">
+
+            <p className="text-sm font-medium text-gray-700">
+              Current location
+            </p>
+
+            <button
+              onClick={getCurrentLocation}
+              disabled={locationLoading}
+              className="mt-2 rounded-lg border border-gray-300 px-5 py-3 font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {locationLoading
+                ? "Getting location..."
+                : "Use my current location"}
+            </button>
+
+          </div>
 
 
-          {/* Location success */}
+          {/* Location found */}
           {latitude !== null &&
             longitude !== null && (
 
@@ -255,7 +259,7 @@ export default function Home() {
             )}
 
 
-          {/* Patient information */}
+          {/* Patient inputs */}
           <div className="mt-8 grid gap-6 md:grid-cols-2">
 
             {/* Age */}
@@ -332,7 +336,7 @@ export default function Home() {
           </div>
 
 
-          {/* Find hospitals */}
+          {/* Find button */}
           <button
             onClick={findHospitals}
             disabled={
@@ -340,7 +344,7 @@ export default function Home() {
               latitude === null ||
               longitude === null
             }
-            className="mt-6 rounded-lg bg-black px-5 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-6 rounded-lg bg-black px-5 py-3 font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading
               ? "Finding hospitals..."
@@ -348,7 +352,7 @@ export default function Home() {
           </button>
 
 
-          {/* Error message */}
+          {/* Error */}
           {error && (
             <p className="mt-4 text-red-600">
               {error}
@@ -358,7 +362,7 @@ export default function Home() {
         </div>
 
 
-        {/* Recommendations */}
+        {/* Results */}
         {recommendations.length > 0 && (
 
           <section className="mt-10">
@@ -368,7 +372,97 @@ export default function Home() {
             </h2>
 
 
-            {/* MAP GOES HERE */}
+            {/* Best option */}
+            {recommendations[0] && (
+
+              <div className="mb-8 rounded-2xl bg-green-50 p-6">
+
+                <p className="text-sm font-semibold uppercase tracking-wide text-green-700">
+                  Best option
+                </p>
+
+
+                <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+
+                  <div>
+
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      {recommendations[0].hospital_name}
+                    </h3>
+
+                    <p className="mt-1 text-gray-600">
+                      {recommendations[0].city}, MA
+                    </p>
+
+                  </div>
+
+
+                  <div className="md:text-right">
+
+                    <p className="text-sm text-gray-500">
+                      Estimated time-to-care
+                    </p>
+
+                    <p className="text-4xl font-bold text-gray-900">
+                      {recommendations[0]
+                        .time_to_care_minutes
+                        .toFixed(0)}
+                      {" min"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <div className="mt-6 grid gap-4 border-t border-green-200 pt-5 sm:grid-cols-2">
+
+                  <div>
+
+                    <p className="text-sm text-gray-500">
+                      Driving time
+                    </p>
+
+                    <p className="text-lg font-semibold text-gray-900">
+                      {recommendations[0]
+                        .travel_minutes
+                        .toFixed(1)}
+                      {" min"}
+                    </p>
+
+                  </div>
+
+
+                  <div>
+
+                    <p className="text-sm text-gray-500">
+                      Predicted wait
+                    </p>
+
+                    <p className="text-lg font-semibold text-gray-900">
+                      {recommendations[0]
+                        .predicted_wait_minutes
+                        .toFixed(1)}
+                      {" min"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <p className="mt-5 text-sm text-gray-700">
+                  Ranked first because it has the lowest
+                  estimated combined driving time and
+                  predicted wait among the nearby
+                  hospitals evaluated.
+                </p>
+
+              </div>
+            )}
+
+
+            {/* Map */}
             {latitude !== null &&
               longitude !== null && (
 
@@ -421,7 +515,9 @@ export default function Home() {
                         </p>
 
                         <p className="text-2xl font-bold text-gray-900">
-                          {hospital.time_to_care_minutes.toFixed(0)}
+                          {hospital
+                            .time_to_care_minutes
+                            .toFixed(0)}
                           {" min"}
                         </p>
 
@@ -432,7 +528,7 @@ export default function Home() {
 
                     <div className="mt-5 grid grid-cols-3 gap-4 border-t pt-5">
 
-                      {/* Drive time */}
+                      {/* Drive */}
                       <div>
 
                         <p className="text-sm text-gray-500">
@@ -440,14 +536,16 @@ export default function Home() {
                         </p>
 
                         <p className="font-medium text-gray-900">
-                          {hospital.travel_minutes.toFixed(1)}
+                          {hospital
+                            .travel_minutes
+                            .toFixed(1)}
                           {" min"}
                         </p>
 
                       </div>
 
 
-                      {/* Predicted wait */}
+                      {/* Wait */}
                       <div>
 
                         <p className="text-sm text-gray-500">
@@ -455,7 +553,9 @@ export default function Home() {
                         </p>
 
                         <p className="font-medium text-gray-900">
-                          {hospital.predicted_wait_minutes.toFixed(1)}
+                          {hospital
+                            .predicted_wait_minutes
+                            .toFixed(1)}
                           {" min"}
                         </p>
 
@@ -470,7 +570,9 @@ export default function Home() {
                         </p>
 
                         <p className="font-medium text-gray-900">
-                          {hospital.driving_miles.toFixed(1)}
+                          {hospital
+                            .driving_miles
+                            .toFixed(1)}
                           {" mi"}
                         </p>
 
@@ -489,12 +591,16 @@ export default function Home() {
 
 
         {/* Disclaimer */}
-        <p className="mt-10 text-sm text-gray-500">
-          Prototype only. Hospital operating
-          conditions are currently simulated.
-          Do not use MedRoute for emergency
-          medical decisions.
-        </p>
+        <div className="mt-10 border-t border-gray-200 pt-6">
+
+          <p className="text-sm text-gray-500">
+            Prototype only. Predicted wait times use
+            simulated hospital operating conditions
+            and should not be used for emergency
+            medical decisions.
+          </p>
+
+        </div>
 
       </div>
 
